@@ -30,12 +30,12 @@ SEED=1234
 LGBM_PARAMS = {'metric':'auc',
                'seed': SEED,
                 'num_threads': 2,
-               'learning_rate':0.028297824665116315,
-               'max_depth': 22,
-               'num_leaves': 22,
-               'min_data_in_leaf': 284,
-               'feature_fraction': 0.25083002596033954,
-               'subsample': 0.6925858222371821
+               'learning_rate':0.014,
+               'max_depth': 19,
+               'num_leaves': 100,
+               'min_data_in_leaf': 102,
+               'feature_fraction': 0.27,
+               'subsample': 0.912
          }
 
 def main():
