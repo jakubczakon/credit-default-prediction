@@ -104,6 +104,6 @@ venv.bak/
 .mypy_cache/
 
 # heavy dirs
-data/
-models/
-reports/
+data/*
+models/*
+reports/*
