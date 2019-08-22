@@ -1,9 +1,7 @@
 import os
 
 import neptune
-import numpy as np
 import pandas as pd
-import swifter
 
 from utils import md5_hash, get_filepaths
 
@@ -17,11 +15,11 @@ def main():
     neptune.init(api_token=os.getenv('NEPTUNE_API_TOKEN'), project_qualified_name=os.getenv('NEPTUNE_PROJECT'))
 
     interim_feature_paths = [APPLICATION_FEATURES_PATH, BUREAU_FEATURES_PATH]
-                                    
+
     with neptune.create_experiment(name='feature_extraction',
-                                   tags=['processed', 'feature_extraction','joined_features'], 
+                                   tags=['processed', 'feature_extraction','joined_features'],
                                    upload_source_files=get_filepaths()):
-        
+
         features = pd.read_csv(interim_feature_paths[0],usecols=['SK_ID_CURR'], nrows=NROWS)
         for path in interim_feature_paths:
             df = pd.read_csv(path, nrows=NROWS)
@@ -30,7 +28,6 @@ def main():
         features.to_csv(PROCESSED_FEATURES_FILEPATH, index=None)
         neptune.set_property('features_version', md5_hash(PROCESSED_FEATURES_FILEPATH))
         neptune.set_property('features_path', PROCESSED_FEATURES_FILEPATH)
-        
-if __name__ == '__main__': 
+
+if __name__ == '__main__':
     main()
- 

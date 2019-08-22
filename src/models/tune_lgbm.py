@@ -2,12 +2,9 @@ import os
 
 import neptune
 from neptunecontrib.monitoring.utils import axes2fig
-import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import skopt
 import skopt.plots
-from sklearn.externals import joblib
 
 from src.features.utils import md5_hash, get_filepaths
 from train_lgbm import train_evaluate
@@ -45,12 +42,12 @@ def to_named_params(params):
 def monitor(res):
     neptune.send_metric('run_score', res.func_vals[-1])
     neptune.send_text('run_parameters', str(to_named_params(res.x_iters[-1])))
-        
-        
+
+
 if __name__ == '__main__':
-    
+
     neptune.init(api_token=os.getenv('NEPTUNE_API_TOKEN'), project_qualified_name=os.getenv('NEPTUNE_PROJECT'))
-    
+
     train_idx = pd.read_csv(TRAIN_IDX_PATH, nrows=NROWS)
     valid_idx = pd.read_csv(VALID_IDX_PATH, nrows=NROWS)
     features = pd.read_csv(FEATURES_PATH, nrows=NROWS)
@@ -72,7 +69,7 @@ if __name__ == '__main__':
                                    upload_source_files=get_filepaths(),
                                    properties={'features_path':FEATURES_PATH,
                                                'features_version':md5_hash(FEATURES_PATH),
-                                               'train_split_version': md5_hash(TRAIN_IDX_PATH),  
+                                               'train_split_version': md5_hash(TRAIN_IDX_PATH),
                                                'valid_split_version': md5_hash(VALID_IDX_PATH)}):
 
         results = skopt.forest_minimize(objective, SPACE, callback=[monitor], **HPO_PARAMS)
@@ -99,7 +96,7 @@ if __name__ == '__main__':
         fig.savefig(os.path.join(REPORTS_DIRPATH, 'evaluations.png'))
         neptune.send_image('diagnostics', os.path.join(REPORTS_DIRPATH, 'evaluations.png'))
 
-        axes = skopt.plots.plot_objective(results)   
+        axes = skopt.plots.plot_objective(results)
         fig = plt.figure(figsize=(16,12))
         fig = axes2fig(axes, fig)
         fig.savefig(os.path.join(REPORTS_DIRPATH, 'objective.png'))

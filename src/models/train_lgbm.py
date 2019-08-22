@@ -4,12 +4,10 @@ import lightgbm as lgb
 import neptune
 from neptunecontrib.monitoring.lightgbm import neptune_monitor
 from neptunecontrib.monitoring.reporting import plot_prediction_distribution
-import numpy as np
 import pandas as pd
-import swifter
 from sklearn.metrics import roc_auc_score
 from sklearn.externals import joblib
-import scikitplot.metrics as sk_metrics 
+import scikitplot.metrics as sk_metrics
 import matplotlib.pyplot as plt
 
 from src.features.utils import md5_hash, get_filepaths
@@ -44,7 +42,7 @@ def main():
     train_idx = pd.read_csv(TRAIN_IDX_PATH, nrows=NROWS)
     valid_idx = pd.read_csv(VALID_IDX_PATH, nrows=NROWS)
     features = pd.read_csv(FEATURES_PATH, nrows=NROWS)
-    
+
     train = pd.merge(train_idx, features, on='SK_ID_CURR')
     valid = pd.merge(valid_idx, features, on='SK_ID_CURR')
 
@@ -52,15 +50,15 @@ def main():
                   'early_stopping_rounds':EARLY_STOPPING_ROUNDS,
                   **LGBM_PARAMS
                  }
-    
+
     with neptune.create_experiment(name='model training',
                                    params=all_params,
                                    tags=['lgbm'],
                                    upload_source_files=get_filepaths(),
                                    properties={'features_path':FEATURES_PATH,
                                                'features_version':md5_hash(FEATURES_PATH),
-                                               'train_split_version': md5_hash(TRAIN_IDX_PATH),  
-                                               'valid_split_version': md5_hash(VALID_IDX_PATH),  
+                                               'train_split_version': md5_hash(TRAIN_IDX_PATH),
+                                               'valid_split_version': md5_hash(VALID_IDX_PATH),
                                               }):
 
         results = train_evaluate(train, valid, LGBM_PARAMS, callbacks=[neptune_monitor()])
@@ -77,7 +75,7 @@ def main():
         valid_pred_path = os.path.join(PREDICTION_DIRPATH, 'valid_preds.csv')
         valid_preds.to_csv(valid_pred_path, index=None)
         neptune.send_artifact(valid_pred_path)
-        
+
         model_path = os.path.join(MODEL_DIRPATH, 'model.pkl')
         joblib.dump(results['model'], model_path)
         neptune.set_property('model_path', model_path)
@@ -89,13 +87,13 @@ def main():
         plot_path = os.path.join(REPORTS_DIRPATH, 'conf_matrix.png')
         fig.savefig(plot_path)
         neptune.send_image('diagnostics', plot_path)
-        
+
         fig, ax = plt.subplots(figsize=(16,12))
         sk_metrics.plot_roc(valid_preds['TARGET'], valid_preds[['preds_neg','preds_pos']], ax=ax)
         plot_path = os.path.join(REPORTS_DIRPATH, 'roc_auc.png')
         fig.savefig(plot_path)
         neptune.send_image('diagnostics', plot_path)
-        
+
         fig, ax = plt.subplots(figsize=(16,12))
         sk_metrics.plot_precision_recall(valid_preds['TARGET'], valid_preds[['preds_neg','preds_pos']], ax=ax)
         plot_path = os.path.join(REPORTS_DIRPATH, 'prec_recall.png')
@@ -107,8 +105,8 @@ def main():
         plot_path = os.path.join(REPORTS_DIRPATH, 'preds_dist.png')
         fig.savefig(plot_path)
         neptune.send_image('diagnostics', plot_path)
-        
-        
+
+
 def train_evaluate(train, valid, params, callbacks=None):
     X_train = train[NUMERICAL_COLUMNS+CATEGORICAL_COLUMNS]
     y_train = train['TARGET']
@@ -127,7 +125,7 @@ def train_evaluate(train, valid, params, callbacks=None):
                           valid_names=['train_iter', 'valid_iter'],
                           early_stopping_rounds = EARLY_STOPPING_ROUNDS,
                           callbacks=callbacks)
-    
+
     y_train_pred = model.predict(X_train, num_iteration=model.best_iteration)
     train_score = roc_auc_score(y_train, y_train_pred)
     train_preds = train[['SK_ID_CURR','TARGET']]
@@ -145,7 +143,7 @@ def train_evaluate(train, valid, params, callbacks=None):
             'train_preds':train_preds,
             'valid_preds':valid_preds,
             'model':model}
-    
+
 if __name__ == '__main__':
 
     main()
