@@ -3,7 +3,7 @@ import os
 import neptune
 import pandas as pd
 
-from utils import md5_hash, get_filepaths
+from src.features.utils import md5_hash, get_filepaths
 
 APPLICATION_FEATURES_PATH = 'data/interim/application_features.csv'
 BUREAU_FEATURES_PATH = 'data/interim/bureau_features.csv'

@@ -1,4 +1,5 @@
 # external requirements
+bentoml
 click
 Sphinx
 coverage
